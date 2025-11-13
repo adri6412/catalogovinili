@@ -6,12 +6,16 @@ RUN docker-php-ext-install mysqli pdo pdo_mysql
 # Abilita mod_rewrite per Apache
 RUN a2enmod rewrite
 
-# Configura Apache per permettere .htaccess
+# Configura Apache per permettere .htaccess e processare PHP
 RUN echo '<Directory /var/www/html/>\n\
     Options Indexes FollowSymLinks\n\
     AllowOverride All\n\
     Require all granted\n\
-</Directory>' > /etc/apache2/conf-available/docker-php.conf \
+    DirectoryIndex index.php index.html\n\
+</Directory>\n\
+<FilesMatch \.php$>\n\
+    SetHandler application/x-httpd-php\n\
+</FilesMatch>' > /etc/apache2/conf-available/docker-php.conf \
     && a2enconf docker-php
 
 # Copia i file dell'applicazione
