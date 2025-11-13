@@ -7,7 +7,6 @@ services:
       context: ./api.catalogovinili.ovh
       dockerfile: Dockerfile
     container_name: catalogovinili_api
-    image: catalogovinili_api:latest
     ports:
       - "${API_PORT:-3001}:3000"
     networks:
@@ -24,7 +23,6 @@ services:
       context: ./httpdocs
       dockerfile: Dockerfile
     container_name: catalogovinili_php
-    image: catalogovinili_php:latest
     ports:
       - "${PHP_PORT:-8081}:80"
     depends_on:
