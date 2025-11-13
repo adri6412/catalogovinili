@@ -34,13 +34,13 @@ $filterArtist = $filterGenre = $filterYear = $searchInput = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
-    $filterArtist = $_GET['filterArtist'];
+    $filterArtist = $_GET['filterArtist'] ?? '';
 
-    $filterGenre = $_GET['filterGenre'];
+    $filterGenre = $_GET['filterGenre'] ?? '';
 
-    $filterYear = $_GET['filterYear'];
+    $filterYear = $_GET['filterYear'] ?? '';
 
-    $searchInput = $_GET['searchInput'];
+    $searchInput = $_GET['searchInput'] ?? '';
 
 }
 
