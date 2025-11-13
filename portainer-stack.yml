@@ -9,7 +9,7 @@ services:
     container_name: catalogovinili_api
     image: catalogovinili_api:latest
     ports:
-      - "${API_PORT:-3000}:3000"
+      - "${API_PORT:-3001}:3000"
     networks:
       - catalogovinili_network
     restart: unless-stopped
@@ -26,7 +26,7 @@ services:
     container_name: catalogovinili_php
     image: catalogovinili_php:latest
     ports:
-      - "${PHP_PORT:-8080}:80"
+      - "${PHP_PORT:-8081}:80"
     depends_on:
       - api
     networks:
