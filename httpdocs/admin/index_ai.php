@@ -78,25 +78,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['albumImage']) && $_F
             $year = $jsonContent['year'] ?? 'N/A';
             $genre = $jsonContent['genre'] ?? 'N/A';
 
-            // Passa i dati a JavaScript per il popup di conferma
-            echo "
-            <script>
-                document.addEventListener('DOMContentLoaded', function() {
-                    const title = '$title';
-                    const artist = '$artist';
-                    const year = '$year';
-                    const genre = '$genre';
-                    const formattedString = `Titolo: \"${title}\"\\nArtista: \"${artist}\"\\nAnno: \"${year}\"\\nGenere: \"${genre}\"\\nSupporto: \"vinyl\"`;
-					    alert('Dati Inseriti Correttamente');
-                        document.getElementById('title').value = title;
-                        document.getElementById('artist').value = artist;
-                        document.getElementById('year').value = year;
-                        document.getElementById('genre').value = genre;
-                        document.getElementById('support').value = 'vinyl';
-                        document.getElementById('vinylForm').submit();
-					
-                });
-            </script>";
+            // Salva i dati estratti per usarli dopo l'HTML
+            $extractedData = [
+                'title' => $title,
+                'artist' => $artist,
+                'year' => $year,
+                'genre' => $genre
+            ];
         } else {
             echo "Errore nell'analisi del contenuto della risposta.";
         }
@@ -267,5 +255,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['albumImage']) && $_F
     <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.12.9/dist/umd/popper.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/js/bootstrap.min.js"></script>
+    
+    <?php if (isset($extractedData)): ?>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            alert('Dati Inseriti Correttamente');
+            document.getElementById('title').value = '<?php echo addslashes($extractedData['title']); ?>';
+            document.getElementById('artist').value = '<?php echo addslashes($extractedData['artist']); ?>';
+            document.getElementById('year').value = '<?php echo addslashes($extractedData['year']); ?>';
+            document.getElementById('genre').value = '<?php echo addslashes($extractedData['genre']); ?>';
+            document.getElementById('support').value = 'vinyl';
+            document.getElementById('vinylForm').submit();
+        });
+    </script>
+    <?php endif; ?>
 </body>
 </html>
