@@ -1,0 +1,21 @@
+{ 
+
+  "name": "Catalogo Vinili", 
+
+  "short_name": "CatalogoVinili", 
+
+  "start_url": "https://catalogovinili.ovh", 
+
+  "display": "standalone", 
+
+  "icons": [{ 
+
+    "src": "logo.png", 
+
+    "sizes": "512x512", 
+
+    "type": "image/png" 
+
+  }] 
+
+}

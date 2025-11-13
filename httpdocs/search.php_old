@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>eBay Search</title>
+</head>
+<body>
+
+<?php
+
+// Funzione di ricerca su eBay
+function searchEbay($keyword) {
+    $url = "https://api.catalogovinili.ovh/search?keyword=" . urlencode($keyword);
+    $response = file_get_contents($url);
+    return json_decode($response, true);
+}
+
+// Ottenere la keyword dalla query string
+$keyword = isset($_GET['keyword']) ? $_GET['keyword'] : "";
+
+// Esempio di ricerca per la keyword ottenuta dalla query string
+$results = searchEbay($keyword);
+
+// Filtra i risultati per i campi "price" e "value" e stampa
+if ($results && isset($results['itemSummaries']) && is_array($results['itemSummaries'])) {
+    echo "<h2>Dischi in vendita su ebay con Relativo Prezzo: $keyword</h2>";
+    echo "<ul>";
+    foreach ($results['itemSummaries'] as $item) {
+        $title = $item['title'];
+        $price = $item['price']['value'];
+        echo "<li>$title - Price: $price USD</li>";
+    }
+    echo "</ul>";
+} else {
+    echo "<p>Nessun risultato trovato per: $keyword</p>";
+}
+
+?>
+
+</body>
+</html>

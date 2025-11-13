@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  # API Node.js
+  api:
+    build:
+      context: ./api.catalogovinili.ovh
+      dockerfile: Dockerfile
+    container_name: catalogovinili_api
+    image: catalogovinili_api:latest
+    ports:
+      - "${API_PORT:-3000}:3000"
+    networks:
+      - catalogovinili_network
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+    labels:
+      - "traefik.enable=false"
+
+  # Sito PHP
+  php:
+    build:
+      context: ./httpdocs
+      dockerfile: Dockerfile
+    container_name: catalogovinili_php
+    image: catalogovinili_php:latest
+    ports:
+      - "${PHP_PORT:-8080}:80"
+    depends_on:
+      - api
+    networks:
+      - catalogovinili_network
+    restart: unless-stopped
+    volumes:
+      - ./httpdocs:/var/www/html
+    environment:
+      - DB_HOST=${DB_HOST}
+      - DB_USER=${DB_USER:-catalogo}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME:-adri641_catalogo}
+      - API_URL=http://api:3000
+    labels:
+      - "traefik.enable=false"
+
+networks:
+  catalogovinili_network:
+    driver: bridge
+

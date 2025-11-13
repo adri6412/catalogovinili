@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  # API Node.js
+  api:
+    build:
+      # MODIFICA QUESTO PATH con la directory dove hai messo i file sul server
+      context: /opt/catalogovinili/api.catalogovinili.ovh
+      dockerfile: Dockerfile
+    container_name: catalogovinili_api
+    ports:
+      - "3000:3000"
+    networks:
+      - catalogovinili_network
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+
+  # Sito PHP
+  php:
+    build:
+      # MODIFICA QUESTO PATH con la directory dove hai messo i file sul server
+      context: /opt/catalogovinili/httpdocs
+      dockerfile: Dockerfile
+    container_name: catalogovinili_php
+    ports:
+      - "8080:80"
+    depends_on:
+      - api
+    networks:
+      - catalogovinili_network
+    restart: unless-stopped
+    volumes:
+      # MODIFICA QUESTO PATH con la directory dove hai messo i file sul server
+      - /opt/catalogovinili/httpdocs:/var/www/html
+    environment:
+      - DB_HOST=${DB_HOST:-localhost}
+      - DB_USER=${DB_USER:-catalogo}
+      - DB_PASSWORD=${DB_PASSWORD:-Fd883d0ffa.}
+      - DB_NAME=${DB_NAME:-adri641_catalogo}
+      - API_URL=http://api:3000
+
+networks:
+  catalogovinili_network:
+    driver: bridge
+
