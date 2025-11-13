@@ -32,8 +32,6 @@ services:
     networks:
       - catalogovinili_network
     restart: unless-stopped
-    volumes:
-      - ./httpdocs:/var/www/html
     environment:
       - DB_HOST=${DB_HOST}
       - DB_USER=${DB_USER:-catalogo}
