@@ -6,6 +6,10 @@ RUN docker-php-ext-install mysqli pdo pdo_mysql
 # Abilita mod_rewrite
 RUN a2enmod rewrite
 
+# Configura il mime type e handler per PHP
+RUN echo "AddType application/x-httpd-php .php" >> /etc/apache2/apache2.conf \
+    && echo "AddType application/x-httpd-php-source .phps" >> /etc/apache2/apache2.conf
+
 # Configura Apache
 RUN { \
     echo '<Directory /var/www/html/>'; \
@@ -14,6 +18,10 @@ RUN { \
     echo '    Require all granted'; \
     echo '    DirectoryIndex index.php index.html'; \
     echo '</Directory>'; \
+    echo ''; \
+    echo '<FilesMatch \.php$>'; \
+    echo '    SetHandler application/x-httpd-php'; \
+    echo '</FilesMatch>'; \
     } > /etc/apache2/conf-available/docker-php.conf \
     && a2enconf docker-php
 
