@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <group
+        android:scaleX="0.5"
+        android:scaleY="0.5"
+        android:translateX="27"
+        android:translateY="27">
+        <!-- Vinyl record -->
+        <path
+            android:fillColor="#1A1A1A"
+            android:pathData="M54,0A54,54 0,1 1,0 54,54 54,0 1,1 54,0Z" />
+        <!-- Center label -->
+        <path
+            android:fillColor="#E91E63"
+            android:pathData="M54,24A30,30 0,1 1,24 54,30 30,0 1,1 54,24Z" />
+        <!-- Center hole -->
+        <path
+            android:fillColor="#424242"
+            android:pathData="M54,44A10,10 0,1 1,44 54,10 10,0 1,1 54,44Z" />
+    </group>
+</vector>
