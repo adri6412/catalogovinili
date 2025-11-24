@@ -177,7 +177,7 @@ class MainActivity : AppCompatActivity() {
         currentArtist = null
         currentGenre = null
         currentYear = null
-        binding.etSearch.text.clear()
+        binding.etSearch.text?.clear()
         loadVinyls()
     }
     
