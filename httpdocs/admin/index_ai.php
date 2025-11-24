@@ -30,8 +30,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['albumImage']) && $_F
     // Imposta l'API Key di OpenAI
     $apiKey = $openaiApiKey;
 
+    // Variabile per raccogliere output di debug ed errori
+    $debugOutput = '';
+
     if ($apiKey === 'YOUR_OPENAI_API_KEY' || empty($apiKey)) {
-        echo '<div class="alert alert-danger">Errore: API Key di OpenAI non configurata in config.php.</div>';
+        $debugOutput .= '<div class="alert alert-danger">Errore: API Key di OpenAI non configurata in config.php.</div>';
     } else {
         // Invia la richiesta all'API di OpenAI
         $url = "https://api.openai.com/v1/chat/completions";
@@ -88,10 +91,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['albumImage']) && $_F
             $jsonErrorMsg = json_last_error_msg();
             
             // Debug: Stampa la risposta grezza in un elemento visibile per il debug
-            echo '<details><summary>Show Raw API Response</summary><pre id="raw-ai-response">' . htmlspecialchars($response) . '</pre></details>';
+            $debugOutput .= '<details><summary>Show Raw API Response</summary><pre id="raw-ai-response">' . htmlspecialchars($response) . '</pre></details>';
 
             if ($jsonError !== JSON_ERROR_NONE) {
-                 echo '<div class="alert alert-danger">Errore nel parsing della risposta JSON principale. Error: ' . $jsonErrorMsg . '</div>';
+                 $debugOutput .= '<div class="alert alert-danger">Errore nel parsing della risposta JSON principale. Error: ' . $jsonErrorMsg . '</div>';
             } elseif (isset($responseData['choices'][0]['message']['content'])) {
                 $content = $responseData['choices'][0]['message']['content'];
                 
@@ -115,13 +118,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['albumImage']) && $_F
                         'genre' => $genre
                     ];
                 } else {
-                    echo '<div class="alert alert-warning">Errore nel parsing della risposta JSON dell\'AI. Raw content: <pre>' . htmlspecialchars($content) . '</pre> JSON Error: ' . json_last_error_msg() . '</div>';
+                    $debugOutput .= '<div class="alert alert-warning">Errore nel parsing della risposta JSON dell\'AI. Raw content: <pre>' . htmlspecialchars($content) . '</pre> JSON Error: ' . json_last_error_msg() . '</div>';
                 }
             } else {
-                 echo '<div class="alert alert-warning">Risposta dell\'AI vuota o malformata. Response: <pre>' . htmlspecialchars(print_r($responseData, true)) . '</pre></div>';
+                 $debugOutput .= '<div class="alert alert-warning">Risposta dell\'AI vuota o malformata. Response: <pre>' . htmlspecialchars(print_r($responseData, true)) . '</pre></div>';
             }
         } else {
-            echo '<div class="alert alert-danger">Errore nella richiesta API: ' . $httpCode . ' - ' . $curlError . ' <br> Response: ' . htmlspecialchars($response) . '</div>';
+            $debugOutput .= '<div class="alert alert-danger">Errore nella richiesta API: ' . $httpCode . ' - ' . $curlError . ' <br> Response: ' . htmlspecialchars($response) . '</div>';
         }
     }
 } elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['title'])) {
@@ -316,15 +319,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['albumImage']) && $_F
                 const doc = parser.parseFromString(data, 'text/html');
                 
                 // Check for errors in the response first
+                // Check for errors in the response first
                 if (data.includes('alert-danger') || data.includes('alert-warning')) {
-                    // Extract error message from the alert div
-                    const tempDiv = document.createElement('div');
-                    tempDiv.innerHTML = data;
-                    const errorAlert = tempDiv.querySelector('.alert');
-                    const errorMessage = errorAlert ? errorAlert.innerText : "Si è verificato un errore. Controlla i dettagli nella pagina.";
-                    
-                    alert("ERRORE AI:\n" + errorMessage);
-                    
+                    // Error is already visible in the page because we rendered it in PHP
+                    // Just stop the loading state
                     btn.innerText = originalText;
                     btn.disabled = false;
                     return;
@@ -414,6 +412,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['albumImage']) && $_F
         <a href="?logout" class="btn btn-danger">Logout</a>
         <br><br>
         <h1>Inserisci un nuovo vinile</h1>
+        
+        <?php if (!empty($debugOutput)) echo $debugOutput; ?>
+
         <form id="vinylForm" action="index_ai.php" method="post" enctype="multipart/form-data">
             <label for="albumImage">Carica l'immagine dell'album:</label>
             <input type="file" name="albumImage" id="albumImage" required>
