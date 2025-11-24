@@ -30,9 +30,9 @@ app.get('/health', (req, res) => {
 });
 
 // API Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/vinyl', vinylRoutes);
-app.use('/api/ai', aiRoutes);
+app.use('/auth', authRoutes);
+app.use('/vinyl', vinylRoutes);
+app.use('/ai', aiRoutes);
 
 // 404 handler
 app.use((req, res) => {
