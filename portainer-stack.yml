@@ -47,7 +47,7 @@ services:
       dockerfile: Dockerfile
     container_name: catalogovinili_mobile_api
     ports:
-      - "${MOBILE_API_PORT:-3002}:3002"
+      - "0.0.0.0:${MOBILE_API_PORT:-3002}:3002"
     networks:
       - catalogovinili_network
     restart: unless-stopped
