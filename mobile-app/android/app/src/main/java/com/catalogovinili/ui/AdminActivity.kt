@@ -88,11 +88,11 @@ class AdminActivity : AppCompatActivity() {
     }
     
     private fun clearForm() {
-        binding.etArtist.text.clear()
-        binding.etTitle.text.clear()
-        binding.etYear.text.clear()
-        binding.etGenre.text.clear()
-        binding.etSupport.text.clear()
+        binding.etArtist.text?.clear()
+        binding.etTitle.text?.clear()
+        binding.etYear.text?.clear()
+        binding.etGenre.text?.clear()
+        binding.etSupport.text?.clear()
     }
     
     override fun onSupportNavigateUp(): Boolean {
