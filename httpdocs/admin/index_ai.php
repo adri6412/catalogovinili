@@ -72,6 +72,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['albumImage']) && $_F
         curl_setopt($ch, CURLOPT_POST, true);
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
         curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+        curl_setopt($ch, CURLOPT_ENCODING, ''); // Accetta qualsiasi encoding (gzip, ecc.)
+        curl_setopt($ch, CURLOPT_TIMEOUT, 30); // Timeout di 30 secondi
 
         // Esegui la richiesta cURL
         $response = curl_exec($ch);
@@ -82,11 +84,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['albumImage']) && $_F
         if ($httpCode === 200) {
             // Decodifica la risposta JSON
             $responseData = json_decode($response, true);
+            $jsonError = json_last_error();
+            $jsonErrorMsg = json_last_error_msg();
             
             // Debug: Stampa la risposta grezza in un elemento visibile per il debug
             echo '<details><summary>Show Raw API Response</summary><pre id="raw-ai-response">' . htmlspecialchars($response) . '</pre></details>';
-            
-            if (isset($responseData['choices'][0]['message']['content'])) {
+
+            if ($jsonError !== JSON_ERROR_NONE) {
+                 echo '<div class="alert alert-danger">Errore nel parsing della risposta JSON principale. Error: ' . $jsonErrorMsg . '</div>';
+            } elseif (isset($responseData['choices'][0]['message']['content'])) {
                 $content = $responseData['choices'][0]['message']['content'];
                 
                 // Pulisci il contenuto da eventuali backtick markdown (es. ```json ... ```)
