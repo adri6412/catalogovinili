@@ -36,7 +36,7 @@ services:
     environment:
       - DB_HOST=${DB_HOST:-localhost}
       - DB_USER=${DB_USER:-catalogo}
-      - DB_PASSWORD=${DB_PASSWORD:-Fd883d0ffa.}
+      - DB_PASSWORD=${DB_PASSWORD:-pwd}
       - DB_NAME=${DB_NAME:-adri641_catalogo}
       - API_URL=http://api:3000
 
