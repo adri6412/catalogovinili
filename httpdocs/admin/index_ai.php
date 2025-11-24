@@ -40,13 +40,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['albumImage']) && $_F
             "Content-Type: application/json"
         ];
         
-        $promptText = "Analyze this album cover image and extract the following information in JSON format:
+        $promptText = "Identify this album based on its cover art. Use your knowledge of music albums to determine the details even if the text is stylized, obscured, or hard to read. 
+        
+        Extract the following information in JSON format:
         - artist: The name of the artist or band.
         - title: The title of the album.
-        - year: The release year (YYYY).
-        - genre: The primary genre of the album.
+        - year: The original release year (YYYY).
+        - genre: The primary genre of the album (e.g., Rock, Jazz, Pop, Electronic, Classical).
         
-        If any information is not visible or cannot be determined, use 'N/A'.
+        If you are not 100% sure about a specific field, make your best guess based on the visual style and context.
         Return ONLY the JSON object.";
 
         $data = [
