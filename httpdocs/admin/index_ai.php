@@ -83,6 +83,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['albumImage']) && $_F
             
             if (isset($responseData['choices'][0]['message']['content'])) {
                 $content = $responseData['choices'][0]['message']['content'];
+                
+                // Pulisci il contenuto da eventuali backtick markdown (es. ```json ... ```)
+                $content = str_replace(["```json", "```"], "", $content);
+                $content = trim($content);
+                
                 $jsonContent = json_decode($content, true);
 
                 if (json_last_error() === JSON_ERROR_NONE) {
@@ -99,10 +104,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['albumImage']) && $_F
                         'genre' => $genre
                     ];
                 } else {
-                    echo '<div class="alert alert-warning">Errore nel parsing della risposta JSON dell\'AI.</div>';
+                    echo '<div class="alert alert-warning">Errore nel parsing della risposta JSON dell\'AI. Raw content: <pre>' . htmlspecialchars($content) . '</pre> JSON Error: ' . json_last_error_msg() . '</div>';
                 }
             } else {
-                 echo '<div class="alert alert-warning">Risposta dell\'AI vuota o malformata.</div>';
+                 echo '<div class="alert alert-warning">Risposta dell\'AI vuota o malformata. Response: <pre>' . htmlspecialchars(print_r($responseData, true)) . '</pre></div>';
             }
         } else {
             echo '<div class="alert alert-danger">Errore nella richiesta API: ' . $httpCode . ' - ' . $curlError . ' <br> Response: ' . htmlspecialchars($response) . '</div>';
@@ -246,6 +251,100 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['albumImage']) && $_F
             } catch (error) {
                 console.error('Errore:', error);
                 alert('Errore nel caricamento dell\'immagine.');
+            }
+        }
+    </script>
+    <script>
+        // Override the analyzeImage function to include better validation
+         async function analyzeImage() {
+            if (isFormSubmitted) {
+                return;
+            }
+
+            const formData = new FormData();
+            const fileInput = document.getElementById('albumImage');
+            if (fileInput.files.length === 0) {
+                alert("Seleziona un'immagine prima.");
+                return;
+            }
+            formData.append('albumImage', fileInput.files[0]);
+
+            // Show loading state
+            const btn = document.querySelector('button[onclick="analyzeImage()"]');
+            const originalText = btn.innerText;
+            btn.innerText = "Elaborazione in corso...";
+            btn.disabled = true;
+
+            try {
+                const response = await fetch('index_ai.php', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.text();
+                document.getElementById('response').innerHTML = data;
+
+                // Trova e visualizza i dati estratti
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(data, 'text/html');
+                
+                // Check if we have valid inputs
+                const titleInput = doc.querySelector('#title');
+                
+                if (!titleInput) {
+                    // Probably an error occurred and was printed in the response div
+                    // The user should see the error in the #response div
+                    btn.innerText = originalText;
+                    btn.disabled = false;
+                    return;
+                }
+
+                const title = titleInput.value;
+                const artist = doc.querySelector('#artist').value;
+                const year = doc.querySelector('#year').value;
+                const genre = doc.querySelector('#genre').value;
+
+                if (!title && !artist) {
+                     // Data is empty, likely an error occurred but inputs were rendered empty
+                     // Check for alerts in the response
+                     if (data.includes('alert-danger') || data.includes('alert-warning')) {
+                         // Error is already visible in #response
+                     } else {
+                         alert("Non è stato possibile estrarre dati dall'immagine. Controlla i log o riprova.");
+                     }
+                     btn.innerText = originalText;
+                     btn.disabled = false;
+                     return;
+                }
+
+                const extractedData = {
+                    title: title,
+                    artist: artist,
+                    year: year,
+                    genre: genre
+                };
+
+                const dataString = JSON.stringify(extractedData, null, 2);
+
+                const confirmation = confirm('Vuoi confermare l\'inserimento di questi dati?\n' + dataString);
+                if (confirmation) {
+                    isFormSubmitted = true;
+                    document.getElementById('title').value = extractedData.title;
+                    document.getElementById('artist').value = extractedData.artist;
+                    document.getElementById('year').value = extractedData.year;
+                    document.getElementById('genre').value = extractedData.genre;
+                    document.getElementById('support').value = 'vinyl';
+                    document.getElementById('vinylForm').submit();
+                } else {
+                    btn.innerText = originalText;
+                    btn.disabled = false;
+                }
+
+            } catch (error) {
+                console.error('Errore:', error);
+                alert('Errore nel caricamento dell\'immagine.');
+                btn.innerText = originalText;
+                btn.disabled = false;
             }
         }
     </script>
