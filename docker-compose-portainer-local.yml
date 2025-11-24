@@ -38,6 +38,7 @@ services:
       - DB_USER=${DB_USER:-catalogo}
       - DB_PASSWORD=${DB_PASSWORD:-pwd}
       - DB_NAME=${DB_NAME:-adri641_catalogo}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
       - API_URL=http://api:3000
 
 networks:
