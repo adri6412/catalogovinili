@@ -309,12 +309,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['albumImage']) && $_F
                 const parser = new DOMParser();
                 const doc = parser.parseFromString(data, 'text/html');
                 
+                // Check for errors in the response first
+                if (data.includes('alert-danger') || data.includes('alert-warning')) {
+                    // Extract error message from the alert div
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = data;
+                    const errorAlert = tempDiv.querySelector('.alert');
+                    const errorMessage = errorAlert ? errorAlert.innerText : "Si è verificato un errore. Controlla i dettagli nella pagina.";
+                    
+                    alert("ERRORE AI:\n" + errorMessage);
+                    
+                    btn.innerText = originalText;
+                    btn.disabled = false;
+                    return;
+                }
+
                 // Check if we have valid inputs
                 const titleInput = doc.querySelector('#title');
                 
                 if (!titleInput) {
-                    // Probably an error occurred and was printed in the response div
-                    // The user should see the error in the #response div
+                    // Should be covered by the error check above, but just in case
+                    alert("Errore imprevisto: Impossibile trovare i campi del form nella risposta.");
                     btn.innerText = originalText;
                     btn.disabled = false;
                     return;
@@ -326,13 +341,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['albumImage']) && $_F
                 const genre = doc.querySelector('#genre').value;
 
                 if (!title && !artist) {
-                     // Data is empty, likely an error occurred but inputs were rendered empty
-                     // Check for alerts in the response
-                     if (data.includes('alert-danger') || data.includes('alert-warning')) {
-                         // Error is already visible in #response
-                     } else {
-                         alert("Non è stato possibile estrarre dati dall'immagine. Controlla i log o riprova.");
-                     }
+                     alert("L'AI non ha trovato dati nell'immagine. Riprova con un'altra immagine o controlla i log.");
                      btn.innerText = originalText;
                      btn.disabled = false;
                      return;
@@ -345,10 +354,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['albumImage']) && $_F
                     genre: genre
                 };
 
-                const dataString = JSON.stringify(extractedData, null, 2);
+                // Create a preview of the data
+                const previewHtml = `
+                    <div class="card mt-3">
+                        <div class="card-header bg-success text-white">Dati Estratti</div>
+                        <div class="card-body text-dark">
+                            <p><strong>Artista:</strong> ${artist}</p>
+                            <p><strong>Titolo:</strong> ${title}</p>
+                            <p><strong>Anno:</strong> ${year}</p>
+                            <p><strong>Genere:</strong> ${genre}</p>
+                            <button id="confirmSaveBtn" class="btn btn-success btn-lg btn-block">Salva nel Database</button>
+                        </div>
+                    </div>
+                `;
 
-                const confirmation = confirm('Vuoi confermare l\'inserimento di questi dati?\n' + dataString);
-                if (confirmation) {
+                // Append preview to response div (keeping the raw response visible if present)
+                const responseDiv = document.getElementById('response');
+                const rawResponseDetails = responseDiv.querySelector('details');
+                
+                // Clear previous content but keep raw response if needed, or just append
+                // Actually, let's just prepend the preview so it's at the top
+                const previewDiv = document.createElement('div');
+                previewDiv.innerHTML = previewHtml;
+                responseDiv.insertBefore(previewDiv, responseDiv.firstChild);
+
+                // Add event listener to the new button
+                document.getElementById('confirmSaveBtn').addEventListener('click', function() {
                     isFormSubmitted = true;
                     document.getElementById('title').value = extractedData.title;
                     document.getElementById('artist').value = extractedData.artist;
@@ -356,10 +387,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['albumImage']) && $_F
                     document.getElementById('genre').value = extractedData.genre;
                     document.getElementById('support').value = 'vinyl';
                     document.getElementById('vinylForm').submit();
-                } else {
-                    btn.innerText = originalText;
-                    btn.disabled = false;
-                }
+                });
+
+                // Reset button state
+                btn.innerText = originalText;
+                btn.disabled = false;
 
             } catch (error) {
                 console.error('Errore:', error);
