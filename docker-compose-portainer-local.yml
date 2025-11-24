@@ -41,6 +41,28 @@ services:
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - API_URL=http://api:3000
 
+  # Mobile API Server
+  mobile-api:
+    build:
+      # MODIFICA QUESTO PATH con la directory dove hai messo i file sul server
+      context: /opt/catalogovinili/mobile-app/api-server
+      dockerfile: Dockerfile
+    container_name: catalogovinili_mobile_api
+    ports:
+      - "3002:3002"
+    networks:
+      - catalogovinili_network
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - DB_HOST=${DB_HOST:-localhost}
+      - DB_USER=${DB_USER:-catalogo}
+      - DB_PASSWORD=${DB_PASSWORD:-pwd}
+      - DB_NAME=${DB_NAME:-adri641_catalogo}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - JWT_SECRET=${JWT_SECRET:-change_this_secret_key_in_production}
+      - PORT=3002
+
 networks:
   catalogovinili_network:
     driver: bridge

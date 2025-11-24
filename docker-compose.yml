@@ -40,6 +40,27 @@ services:
     # Per accedere al database esterno dall'host, usa host.docker.internal su Windows/Mac
     # oppure l'IP dell'host su Linux. Configura DB_HOST di conseguenza.
 
+  # Mobile API Server
+  mobile-api:
+    build:
+      context: ./mobile-app/api-server
+      dockerfile: Dockerfile
+    container_name: catalogovinili_mobile_api
+    ports:
+      - "3002:3002"
+    networks:
+      - catalogovinili_network
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - DB_HOST=${DB_HOST:-localhost}
+      - DB_USER=${DB_USER:-catalogo}
+      - DB_PASSWORD=${DB_PASSWORD:-Fd883d0ffa.}
+      - DB_NAME=${DB_NAME:-adri641_catalogo}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - JWT_SECRET=${JWT_SECRET:-change_this_secret_key_in_production}
+      - PORT=3002
+
 networks:
   catalogovinili_network:
     driver: bridge
