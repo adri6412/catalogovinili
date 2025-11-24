@@ -40,6 +40,29 @@ services:
     labels:
       - "traefik.enable=false"
 
+  # Mobile API Server
+  mobile-api:
+    build:
+      context: ./mobile-app/api-server
+      dockerfile: Dockerfile
+    container_name: catalogovinili_mobile_api
+    ports:
+      - "${MOBILE_API_PORT:-3002}:3002"
+    networks:
+      - catalogovinili_network
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - DB_HOST=${DB_HOST}
+      - DB_USER=${DB_USER:-catalogo}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME:-adri641_catalogo}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - JWT_SECRET=${JWT_SECRET:-change_this_secret_key_in_production}
+      - PORT=3002
+    labels:
+      - "traefik.enable=false"
+
 networks:
   catalogovinili_network:
     driver: bridge
