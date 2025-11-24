@@ -5,9 +5,13 @@ $servername = getenv('DB_HOST') ?: "localhost";
 
 $username = getenv('DB_USER') ?: "catalogo";
 
-$password = getenv('DB_PASSWORD') ?: "Fd883d0ffa.";
+$password = getenv('DB_PASSWORD') ?: "YOUR_DB_PASSWORD";
 
 $dbname = getenv('DB_NAME') ?: "adri641_catalogo";
+
+// OpenAI API Key
+// TODO: Replace with your actual API key or set the OPENAI_API_KEY environment variable
+$openaiApiKey = getenv('OPENAI_API_KEY') ?: "YOUR_OPENAI_API_KEY";
 
 
 

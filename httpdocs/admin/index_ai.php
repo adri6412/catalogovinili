@@ -28,68 +28,85 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['albumImage']) && $_F
     $encodedImage = base64_encode($imageData);
 
     // Imposta l'API Key di OpenAI
-    $apiKey = 'sk-proj-g8V4o26t4lVNAALNRP31T3BlbkFJxGCbSX0nhio2sv3GLiPo'; // Sostituisci con la tua chiave API
+    $apiKey = $openaiApiKey;
 
-    // Invia la richiesta all'API di OpenAI
-    $url = "https://api.openai.com/v1/chat/completions";
-    $headers = [
-        "Authorization: Bearer $apiKey",
-        "Content-Type: application/json"
-    ];
-    $data = [
-        "model" => "gpt-4o",
-        "messages" => [
-            [
-                "role" => "user",
-                "content" => [
-                    ["type" => "text", "text" => "From this image extract the following information in json: Artist,title,year,genre"],
-                    ["type" => "image_url", "image_url" => ["url" => "data:image/jpeg;base64,$encodedImage"]]
-                ]
-            ]
-        ],
-        "max_tokens" => 300,
-    ];
-
-    // Inizializza la richiesta cURL
-    $ch = curl_init($url);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_POST, true);
-    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
-
-    // Esegui la richiesta cURL
-    $response = curl_exec($ch);
-    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    curl_close($ch);
-
-    // Decodifica la risposta JSON
-    $data = json_decode($response, true);
-
-    if ($httpCode === 200 && isset($data['choices'][0]['message']['content'])) {
-        $content = $data['choices'][0]['message']['content'];
-
-        // Rimuovi i backtick e decodifica il contenuto JSON
-        $content = str_replace(["```json", "```"], "", $content);
-        $jsonContent = json_decode($content, true);
-
-        if (json_last_error() === JSON_ERROR_NONE) {
-            $title = $jsonContent['title'] ?? 'N/A';
-            $artist = $jsonContent['artist'] ?? 'N/A';
-            $year = $jsonContent['year'] ?? 'N/A';
-            $genre = $jsonContent['genre'] ?? 'N/A';
-
-            // Salva i dati estratti per usarli dopo l'HTML
-            $extractedData = [
-                'title' => $title,
-                'artist' => $artist,
-                'year' => $year,
-                'genre' => $genre
-            ];
-        } else {
-            echo "Errore nell'analisi del contenuto della risposta.";
-        }
+    if ($apiKey === 'YOUR_OPENAI_API_KEY' || empty($apiKey)) {
+        echo '<div class="alert alert-danger">Errore: API Key di OpenAI non configurata in config.php.</div>';
     } else {
-        echo "Errore nell'analisi dell'immagine. HTTP Code: $httpCode";
+        // Invia la richiesta all'API di OpenAI
+        $url = "https://api.openai.com/v1/chat/completions";
+        $headers = [
+            "Authorization: Bearer $apiKey",
+            "Content-Type: application/json"
+        ];
+        
+        $promptText = "Analyze this album cover image and extract the following information in JSON format:
+        - artist: The name of the artist or band.
+        - title: The title of the album.
+        - year: The release year (YYYY).
+        - genre: The primary genre of the album.
+        
+        If any information is not visible or cannot be determined, use 'N/A'.
+        Return ONLY the JSON object.";
+
+        $data = [
+            "model" => "gpt-4o",
+            "messages" => [
+                [
+                    "role" => "user",
+                    "content" => [
+                        ["type" => "text", "text" => $promptText],
+                        ["type" => "image_url", "image_url" => ["url" => "data:image/jpeg;base64,$encodedImage"]]
+                    ]
+                ]
+            ],
+            "max_tokens" => 300,
+            "response_format" => ["type" => "json_object"]
+        ];
+
+        // Inizializza la richiesta cURL
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+
+        // Esegui la richiesta cURL
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlError = curl_error($ch);
+        curl_close($ch);
+
+        if ($httpCode === 200) {
+            // Decodifica la risposta JSON
+            $responseData = json_decode($response, true);
+            
+            if (isset($responseData['choices'][0]['message']['content'])) {
+                $content = $responseData['choices'][0]['message']['content'];
+                $jsonContent = json_decode($content, true);
+
+                if (json_last_error() === JSON_ERROR_NONE) {
+                    $title = $jsonContent['title'] ?? 'N/A';
+                    $artist = $jsonContent['artist'] ?? 'N/A';
+                    $year = $jsonContent['year'] ?? 'N/A';
+                    $genre = $jsonContent['genre'] ?? 'N/A';
+
+                    // Salva i dati estratti per usarli dopo l'HTML
+                    $extractedData = [
+                        'title' => $title,
+                        'artist' => $artist,
+                        'year' => $year,
+                        'genre' => $genre
+                    ];
+                } else {
+                    echo '<div class="alert alert-warning">Errore nel parsing della risposta JSON dell\'AI.</div>';
+                }
+            } else {
+                 echo '<div class="alert alert-warning">Risposta dell\'AI vuota o malformata.</div>';
+            }
+        } else {
+            echo '<div class="alert alert-danger">Errore nella richiesta API: ' . $httpCode . ' - ' . $curlError . ' <br> Response: ' . htmlspecialchars($response) . '</div>';
+        }
     }
 } elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['title'])) {
     // Inserimento dei dati nel database dalla conferma del form
