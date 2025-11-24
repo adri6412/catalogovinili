@@ -35,6 +35,7 @@ services:
       - DB_USER=${DB_USER:-catalogo}
       - DB_PASSWORD=${DB_PASSWORD:-Fd883d0ffa.}
       - DB_NAME=${DB_NAME:-adri641_catalogo}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
       - API_URL=http://api:3000
     # Per accedere al database esterno dall'host, usa host.docker.internal su Windows/Mac
     # oppure l'IP dell'host su Linux. Configura DB_HOST di conseguenza.
