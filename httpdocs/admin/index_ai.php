@@ -330,9 +330,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['albumImage']) && $_F
 
                 // Check if we have valid inputs
                 const titleInput = doc.querySelector('#title');
+                console.log("Parsed Title Input:", titleInput);
                 
                 if (!titleInput) {
                     // Should be covered by the error check above, but just in case
+                    console.error("Title input not found in parsed HTML");
                     alert("Errore imprevisto: Impossibile trovare i campi del form nella risposta.");
                     btn.innerText = originalText;
                     btn.disabled = false;
@@ -343,8 +345,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['albumImage']) && $_F
                 const artist = doc.querySelector('#artist').value;
                 const year = doc.querySelector('#year').value;
                 const genre = doc.querySelector('#genre').value;
+                
+                console.log("Extracted Data:", { title, artist, year, genre });
 
                 if (!title && !artist) {
+                     console.warn("Title and Artist are empty");
                      alert("L'AI non ha trovato dati nell'immagine. Riprova con un'altra immagine o controlla i log.");
                      btn.innerText = originalText;
                      btn.disabled = false;
@@ -418,10 +423,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['albumImage']) && $_F
         <form id="vinylForm" action="index_ai.php" method="post" enctype="multipart/form-data">
             <label for="albumImage">Carica l'immagine dell'album:</label>
             <input type="file" name="albumImage" id="albumImage" required>
-            <input type="hidden" name="title" id="title" value="<?php echo $title; ?>">
-            <input type="hidden" name="artist" id="artist" value="<?php echo $artist; ?>">
-            <input type="hidden" name="year" id="year" value="<?php echo $year; ?>">
-            <input type="hidden" name="genre" id="genre" value="<?php echo $genre; ?>">  <!-- Aggiunto il genere -->
+            <input type="hidden" name="title" id="title" value="<?php echo htmlspecialchars($title); ?>">
+            <input type="hidden" name="artist" id="artist" value="<?php echo htmlspecialchars($artist); ?>">
+            <input type="hidden" name="year" id="year" value="<?php echo htmlspecialchars($year); ?>">
+            <input type="hidden" name="genre" id="genre" value="<?php echo htmlspecialchars($genre); ?>">  <!-- Aggiunto il genere -->
             <input type="hidden" name="support" id="support" value="vinyl"> <!-- Aggiunto il supporto -->
             <button type="button" onclick="analyzeImage()">Carica</button>
         </form>
