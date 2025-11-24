@@ -33,8 +33,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['albumImage']) && $_F
     // Variabile per raccogliere output di debug ed errori
     $debugOutput = '';
 
+    // Check if it's an AJAX request
+    $isAjax = isset($_POST['ajax']) && $_POST['ajax'] === '1';
+
     if ($apiKey === 'YOUR_OPENAI_API_KEY' || empty($apiKey)) {
-        $debugOutput .= '<div class="alert alert-danger">Errore: API Key di OpenAI non configurata in config.php.</div>';
+        $errorMsg = 'Errore: API Key di OpenAI non configurata in config.php.';
+        if ($isAjax) {
+            echo json_encode(['success' => false, 'error' => $errorMsg]);
+            exit;
+        }
+        $debugOutput .= '<div class="alert alert-danger">' . $errorMsg . '</div>';
     } else {
         // Invia la richiesta all'API di OpenAI
         $url = "https://api.openai.com/v1/chat/completions";
@@ -90,11 +98,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['albumImage']) && $_F
             $jsonError = json_last_error();
             $jsonErrorMsg = json_last_error_msg();
             
-            // Debug: Stampa la risposta grezza in un elemento visibile per il debug
-            $debugOutput .= '<details><summary>Show Raw API Response</summary><pre id="raw-ai-response">' . htmlspecialchars($response) . '</pre></details>';
+            // Debug info
+            $rawResponse = htmlspecialchars($response);
+            $debugOutput .= '<details><summary>Show Raw API Response</summary><pre id="raw-ai-response">' . $rawResponse . '</pre></details>';
 
             if ($jsonError !== JSON_ERROR_NONE) {
-                 $debugOutput .= '<div class="alert alert-danger">Errore nel parsing della risposta JSON principale. Error: ' . $jsonErrorMsg . '</div>';
+                 $errorMsg = 'Errore nel parsing della risposta JSON principale. Error: ' . $jsonErrorMsg;
+                 if ($isAjax) {
+                     echo json_encode(['success' => false, 'error' => $errorMsg, 'debug' => $rawResponse]);
+                     exit;
+                 }
+                 $debugOutput .= '<div class="alert alert-danger">' . $errorMsg . '</div>';
             } elseif (isset($responseData['choices'][0]['message']['content'])) {
                 $content = $responseData['choices'][0]['message']['content'];
                 
@@ -110,21 +124,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['albumImage']) && $_F
                     $year = $jsonContent['year'] ?? 'N/A';
                     $genre = $jsonContent['genre'] ?? 'N/A';
 
-                    // Salva i dati estratti per usarli dopo l'HTML
                     $extractedData = [
                         'title' => $title,
                         'artist' => $artist,
                         'year' => $year,
                         'genre' => $genre
                     ];
+
+                    if ($isAjax) {
+                        echo json_encode(['success' => true, 'data' => $extractedData, 'debug' => $rawResponse]);
+                        exit;
+                    }
                 } else {
-                    $debugOutput .= '<div class="alert alert-warning">Errore nel parsing della risposta JSON dell\'AI. Raw content: <pre>' . htmlspecialchars($content) . '</pre> JSON Error: ' . json_last_error_msg() . '</div>';
+                    $errorMsg = 'Errore nel parsing della risposta JSON dell\'AI. JSON Error: ' . json_last_error_msg();
+                    if ($isAjax) {
+                        echo json_encode(['success' => false, 'error' => $errorMsg, 'debug' => $rawResponse, 'raw_content' => $content]);
+                        exit;
+                    }
+                    $debugOutput .= '<div class="alert alert-warning">' . $errorMsg . ' Raw content: <pre>' . htmlspecialchars($content) . '</pre></div>';
                 }
             } else {
-                 $debugOutput .= '<div class="alert alert-warning">Risposta dell\'AI vuota o malformata. Response: <pre>' . htmlspecialchars(print_r($responseData, true)) . '</pre></div>';
+                 $errorMsg = 'Risposta dell\'AI vuota o malformata.';
+                 if ($isAjax) {
+                     echo json_encode(['success' => false, 'error' => $errorMsg, 'debug' => $rawResponse]);
+                     exit;
+                 }
+                 $debugOutput .= '<div class="alert alert-warning">' . $errorMsg . ' Response: <pre>' . htmlspecialchars(print_r($responseData, true)) . '</pre></div>';
             }
         } else {
-            $debugOutput .= '<div class="alert alert-danger">Errore nella richiesta API: ' . $httpCode . ' - ' . $curlError . ' <br> Response: ' . htmlspecialchars($response) . '</div>';
+            $errorMsg = 'Errore nella richiesta API: ' . $httpCode . ' - ' . $curlError;
+            if ($isAjax) {
+                echo json_encode(['success' => false, 'error' => $errorMsg, 'debug' => $response]);
+                exit;
+            }
+            $debugOutput .= '<div class="alert alert-danger">' . $errorMsg . ' <br> Response: ' . htmlspecialchars($response) . '</div>';
         }
     }
 } elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['title'])) {
@@ -275,13 +308,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['albumImage']) && $_F
                 return;
             }
 
-            const formData = new FormData();
             const fileInput = document.getElementById('albumImage');
             if (fileInput.files.length === 0) {
                 alert("Seleziona un'immagine prima.");
                 return;
             }
-            formData.append('albumImage', fileInput.files[0]);
 
             // Show loading state
             const btn = document.querySelector('button[onclick="analyzeImage()"]');
@@ -289,79 +320,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['albumImage']) && $_F
             btn.innerText = "Elaborazione in corso...";
             btn.disabled = true;
 
+            const formData = new FormData();
+            formData.append('albumImage', fileInput.files[0]);
+            formData.append('ajax', '1'); // Request JSON response
+
             try {
                 const response = await fetch('index_ai.php', {
                     method: 'POST',
                     body: formData
                 });
 
-                const data = await response.text();
-                document.getElementById('response').innerHTML = data;
+                const result = await response.json();
+                console.log("Server Response:", result);
 
-                // Log raw response for debugging
-                const rawResponsePre = document.getElementById('raw-ai-response');
-                if (rawResponsePre) {
-                    try {
-                        const rawJson = JSON.parse(rawResponsePre.innerText);
-                        console.log("OpenAI Raw Response:", rawJson);
-                        if (rawJson.choices && rawJson.choices[0] && rawJson.choices[0].message) {
-                             console.log("Extracted Content:", rawJson.choices[0].message.content);
-                        }
-                    } catch (e) {
-                        console.log("Raw Response Text:", rawResponsePre.innerText);
-                    }
-                } else {
-                    console.log("No raw response element found. Full HTML response:", data);
+                // Show debug info if available
+                if (result.debug) {
+                    const responseDiv = document.getElementById('response');
+                    responseDiv.innerHTML = `<details><summary>Show Raw API Response</summary><pre>${result.debug}</pre></details>`;
                 }
 
-                // Trova e visualizza i dati estratti
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(data, 'text/html');
-                
-                // Check for errors in the response first
-                // Check for errors in the response first
-                if (data.includes('alert-danger') || data.includes('alert-warning')) {
-                    // Error is already visible in the page because we rendered it in PHP
-                    // Just stop the loading state
+                if (!result.success) {
+                    alert("ERRORE: " + (result.error || "Errore sconosciuto"));
                     btn.innerText = originalText;
                     btn.disabled = false;
                     return;
                 }
 
-                // Check if we have valid inputs
-                const titleInput = doc.querySelector('#title');
-                console.log("Parsed Title Input:", titleInput);
-                
-                if (!titleInput) {
-                    // Should be covered by the error check above, but just in case
-                    console.error("Title input not found in parsed HTML");
-                    alert("Errore imprevisto: Impossibile trovare i campi del form nella risposta.");
-                    btn.innerText = originalText;
-                    btn.disabled = false;
-                    return;
-                }
+                const extractedData = result.data;
+                const title = extractedData.title;
+                const artist = extractedData.artist;
+                const year = extractedData.year;
+                const genre = extractedData.genre;
 
-                const title = titleInput.value;
-                const artist = doc.querySelector('#artist').value;
-                const year = doc.querySelector('#year').value;
-                const genre = doc.querySelector('#genre').value;
-                
-                console.log("Extracted Data:", { title, artist, year, genre });
+                console.log("Extracted Data:", extractedData);
 
                 if (!title && !artist) {
-                     console.warn("Title and Artist are empty");
-                     alert("L'AI non ha trovato dati nell'immagine. Riprova con un'altra immagine o controlla i log.");
+                     alert("L'AI non ha trovato dati nell'immagine. Riprova.");
                      btn.innerText = originalText;
                      btn.disabled = false;
                      return;
                 }
-
-                const extractedData = {
-                    title: title,
-                    artist: artist,
-                    year: year,
-                    genre: genre
-                };
 
                 // Create a preview of the data
                 const previewHtml = `
@@ -377,12 +375,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['albumImage']) && $_F
                     </div>
                 `;
 
-                // Append preview to response div (keeping the raw response visible if present)
+                // Append preview to response div
                 const responseDiv = document.getElementById('response');
-                const rawResponseDetails = responseDiv.querySelector('details');
-                
-                // Clear previous content but keep raw response if needed, or just append
-                // Actually, let's just prepend the preview so it's at the top
                 const previewDiv = document.createElement('div');
                 previewDiv.innerHTML = previewHtml;
                 responseDiv.insertBefore(previewDiv, responseDiv.firstChild);
@@ -404,7 +398,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['albumImage']) && $_F
 
             } catch (error) {
                 console.error('Errore:', error);
-                alert('Errore nel caricamento dell\'immagine.');
+                // Try to get text response if JSON failed
+                alert('Errore di comunicazione con il server. Controlla la console.');
                 btn.innerText = originalText;
                 btn.disabled = false;
             }
