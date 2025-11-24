@@ -83,8 +83,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['albumImage']) && $_F
             // Decodifica la risposta JSON
             $responseData = json_decode($response, true);
             
-            // Debug: Stampa la risposta grezza in un elemento nascosto per la console JS
-            echo '<div id="raw-ai-response" style="display:none;">' . htmlspecialchars($response) . '</div>';
+            // Debug: Stampa la risposta grezza in un elemento visibile per il debug
+            echo '<details><summary>Show Raw API Response</summary><pre id="raw-ai-response">' . htmlspecialchars($response) . '</pre></details>';
             
             if (isset($responseData['choices'][0]['message']['content'])) {
                 $content = $responseData['choices'][0]['message']['content'];
@@ -290,16 +290,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['albumImage']) && $_F
                 document.getElementById('response').innerHTML = data;
 
                 // Log raw response for debugging
-                const rawResponseDiv = document.getElementById('raw-ai-response');
-                if (rawResponseDiv) {
+                const rawResponsePre = document.getElementById('raw-ai-response');
+                if (rawResponsePre) {
                     try {
-                        const rawJson = JSON.parse(rawResponseDiv.innerText);
+                        const rawJson = JSON.parse(rawResponsePre.innerText);
                         console.log("OpenAI Raw Response:", rawJson);
                         if (rawJson.choices && rawJson.choices[0] && rawJson.choices[0].message) {
                              console.log("Extracted Content:", rawJson.choices[0].message.content);
                         }
                     } catch (e) {
-                        console.log("Raw Response Text:", rawResponseDiv.innerText);
+                        console.log("Raw Response Text:", rawResponsePre.innerText);
                     }
                 } else {
                     console.log("No raw response element found. Full HTML response:", data);
