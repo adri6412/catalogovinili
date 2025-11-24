@@ -32,8 +32,14 @@ router.post('/login', async (req, res) => {
 
         const user = rows[0];
 
+        // Convert PHP's $2y$ bcrypt hash to Node.js compatible $2a$ format
+        let hashedPassword = user.password;
+        if (hashedPassword.startsWith('$2y$')) {
+            hashedPassword = hashedPassword.replace(/^\$2y\$/, '$2a$');
+        }
+
         // Verify password
-        const isPasswordValid = await bcrypt.compare(password, user.password);
+        const isPasswordValid = await bcrypt.compare(password, hashedPassword);
 
         if (!isPasswordValid) {
             return res.status(401).json({
