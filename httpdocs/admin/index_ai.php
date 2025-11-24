@@ -83,6 +83,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['albumImage']) && $_F
             // Decodifica la risposta JSON
             $responseData = json_decode($response, true);
             
+            // Debug: Stampa la risposta grezza in un elemento nascosto per la console JS
+            echo '<div id="raw-ai-response" style="display:none;">' . htmlspecialchars($response) . '</div>';
+            
             if (isset($responseData['choices'][0]['message']['content'])) {
                 $content = $responseData['choices'][0]['message']['content'];
                 
@@ -285,6 +288,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['albumImage']) && $_F
 
                 const data = await response.text();
                 document.getElementById('response').innerHTML = data;
+
+                // Log raw response for debugging
+                const rawResponseDiv = document.getElementById('raw-ai-response');
+                if (rawResponseDiv) {
+                    try {
+                        const rawJson = JSON.parse(rawResponseDiv.innerText);
+                        console.log("OpenAI Raw Response:", rawJson);
+                        if (rawJson.choices && rawJson.choices[0] && rawJson.choices[0].message) {
+                             console.log("Extracted Content:", rawJson.choices[0].message.content);
+                        }
+                    } catch (e) {
+                        console.log("Raw Response Text:", rawResponseDiv.innerText);
+                    }
+                } else {
+                    console.log("No raw response element found. Full HTML response:", data);
+                }
 
                 // Trova e visualizza i dati estratti
                 const parser = new DOMParser();
