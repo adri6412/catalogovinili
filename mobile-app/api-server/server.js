@@ -5,6 +5,7 @@ const cors = require('cors');
 const authRoutes = require('./routes/auth');
 const vinylRoutes = require('./routes/vinyl');
 const aiRoutes = require('./routes/ai');
+const ebayRoutes = require('./routes/ebay'); // New eBay route
 
 const app = express();
 const PORT = process.env.PORT || 3002;
@@ -22,33 +23,24 @@ app.use((req, res, next) => {
 
 // Health check endpoint
 app.get('/health', (req, res) => {
-    res.json({
-        success: true,
-        message: 'Catalogo Vinili Mobile API is running',
-        timestamp: new Date().toISOString()
-    });
+    res.json({ success: true, message: 'Catalogo Vinili Mobile API is running' });
 });
 
 // API Routes
 app.use('/auth', authRoutes);
 app.use('/vinyl', vinylRoutes);
 app.use('/ai', aiRoutes);
+app.use('/ebay', ebayRoutes);
 
 // 404 handler
 app.use((req, res) => {
-    res.status(404).json({
-        success: false,
-        error: 'Endpoint not found'
-    });
+    res.status(404).json({ success: false, error: 'Endpoint not found' });
 });
 
 // Error handler
 app.use((err, req, res, next) => {
     console.error('Server error:', err);
-    res.status(500).json({
-        success: false,
-        error: err.message || 'Internal server error'
-    });
+    res.status(500).json({ success: false, error: err.message || 'Internal server error' });
 });
 
 // Start server

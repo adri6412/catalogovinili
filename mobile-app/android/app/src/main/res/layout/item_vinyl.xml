@@ -56,6 +56,16 @@
                 android:gravity="end"/>
         </LinearLayout>
 
+        <ImageButton
+            android:id="@+id/btnDelete"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@android:drawable/ic_menu_delete"
+            android:contentDescription="Delete"
+            android:background="@null"
+            android:layout_gravity="end"
+            android:layout_marginTop="8dp"/>
+
     </LinearLayout>
 
 </com.google.android.material.card.MaterialCardView>

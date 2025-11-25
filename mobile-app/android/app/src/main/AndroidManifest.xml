@@ -45,6 +45,7 @@
             android:label="Riconoscimento AI"
             android:parentActivityName=".ui.AdminActivity" />
             
-    </application>
+    <activity android:name=".ui.EbaySearchActivity" android:exported="false" android:label="Cerca eBay" />
+</application>
 
 </manifest>

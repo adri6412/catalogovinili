@@ -14,4 +14,10 @@
         android:icon="@android:drawable/ic_lock_power_off"
         app:showAsAction="never"/>
         
+    <item
+        android:id="@+id/action_search_ebay"
+        android:title="Cerca eBay"
+        android:icon="@android:drawable/ic_menu_search"
+        app:showAsAction="ifRoom"/>
+        
 </menu>

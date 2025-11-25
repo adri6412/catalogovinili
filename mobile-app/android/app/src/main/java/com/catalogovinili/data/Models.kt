@@ -51,3 +51,11 @@ data class VinylRequest(
     val genre: String,
     val support: String = "vinyl"
 )
+
+// eBay search result item
+data class EbayItem(
+    val title: String,
+    val viewItemURL: String,
+    val galleryURL: String?,
+    val price: String?
+)

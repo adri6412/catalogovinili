@@ -266,4 +266,15 @@ router.get('/filters/years', authMiddleware, async (req, res) => {
     }
 });
 
+
+// Debug route to check table schema
+router.get('/debug/schema', async (req, res) => {
+    try {
+        const [rows] = await db.query('DESCRIBE vinili');
+        res.json(rows);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 module.exports = router;
