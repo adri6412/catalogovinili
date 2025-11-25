@@ -4,6 +4,19 @@ const authMiddleware = require('../middleware/auth');
 
 const router = express.Router();
 
+// Helper to generate ID
+const generateId = (artist, title) => {
+    return Buffer.from(`${artist}|${title}`).toString('base64');
+};
+
+// Helper to parse ID
+const parseId = (id) => {
+    const decoded = Buffer.from(id, 'base64').toString('utf8');
+    const parts = decoded.split('|');
+    if (parts.length < 2) return null;
+    return { artist: parts[0], title: parts[1] };
+};
+
 // Get all vinyls with optional filters
 router.get('/', authMiddleware, async (req, res) => {
     try {
@@ -40,10 +53,16 @@ router.get('/', authMiddleware, async (req, res) => {
 
         const [rows] = await db.query(query, params);
 
+        // Add virtual ID to each row
+        const data = rows.map(row => ({
+            ...row,
+            id: generateId(row.Artista, row.Titolo)
+        }));
+
         res.json({
             success: true,
-            data: rows,
-            count: rows.length
+            data: data,
+            count: data.length
         });
 
     } catch (error) {
@@ -59,10 +78,18 @@ router.get('/', authMiddleware, async (req, res) => {
 router.get('/:id', authMiddleware, async (req, res) => {
     try {
         const { id } = req.params;
+        const parsed = parseId(id);
+
+        if (!parsed) {
+            return res.status(400).json({
+                success: false,
+                error: 'Invalid ID format'
+            });
+        }
 
         const [rows] = await db.query(
-            'SELECT * FROM vinili WHERE id = ?',
-            [id]
+            'SELECT * FROM vinili WHERE Artista = ? AND Titolo = ?',
+            [parsed.artist, parsed.title]
         );
 
         if (rows.length === 0) {
@@ -72,9 +99,14 @@ router.get('/:id', authMiddleware, async (req, res) => {
             });
         }
 
+        const vinyl = {
+            ...rows[0],
+            id: id
+        };
+
         res.json({
             success: true,
-            data: rows[0]
+            data: vinyl
         });
 
     } catch (error) {
@@ -103,10 +135,12 @@ router.post('/', authMiddleware, async (req, res) => {
             [artist, title, year || '', genre || '', support || 'vinyl']
         );
 
+        const newId = generateId(artist, title);
+
         res.status(201).json({
             success: true,
             data: {
-                id: result.insertId,
+                id: newId,
                 artist,
                 title,
                 year,
@@ -129,7 +163,15 @@ router.post('/', authMiddleware, async (req, res) => {
 router.put('/:id', authMiddleware, async (req, res) => {
     try {
         const { id } = req.params;
+        const parsed = parseId(id);
         const { artist, title, year, genre, support } = req.body;
+
+        if (!parsed) {
+            return res.status(400).json({
+                success: false,
+                error: 'Invalid ID format'
+            });
+        }
 
         if (!artist || !title) {
             return res.status(400).json({
@@ -139,8 +181,8 @@ router.put('/:id', authMiddleware, async (req, res) => {
         }
 
         const [result] = await db.query(
-            'UPDATE vinili SET Artista = ?, Titolo = ?, Anno = ?, Genere = ?, Supporto = ? WHERE id = ?',
-            [artist, title, year || '', genre || '', support || 'vinyl', id]
+            'UPDATE vinili SET Artista = ?, Titolo = ?, Anno = ?, Genere = ?, Supporto = ? WHERE Artista = ? AND Titolo = ?',
+            [artist, title, year || '', genre || '', support || 'vinyl', parsed.artist, parsed.title]
         );
 
         if (result.affectedRows === 0) {
@@ -150,10 +192,12 @@ router.put('/:id', authMiddleware, async (req, res) => {
             });
         }
 
+        const newId = generateId(artist, title);
+
         res.json({
             success: true,
             data: {
-                id,
+                id: newId,
                 artist,
                 title,
                 year,
@@ -176,10 +220,18 @@ router.put('/:id', authMiddleware, async (req, res) => {
 router.delete('/:id', authMiddleware, async (req, res) => {
     try {
         const { id } = req.params;
+        const parsed = parseId(id);
+
+        if (!parsed) {
+            return res.status(400).json({
+                success: false,
+                error: 'Invalid ID format'
+            });
+        }
 
         const [result] = await db.query(
-            'DELETE FROM vinili WHERE id = ?',
-            [id]
+            'DELETE FROM vinili WHERE Artista = ? AND Titolo = ?',
+            [parsed.artist, parsed.title]
         );
 
         if (result.affectedRows === 0) {

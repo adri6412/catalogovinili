@@ -1,7 +1,7 @@
 package com.catalogovinili.data
 
 data class Vinyl(
-    val id: Int? = null,
+    val id: String? = null,
     val Artista: String,
     val Titolo: String,
     val Anno: String,

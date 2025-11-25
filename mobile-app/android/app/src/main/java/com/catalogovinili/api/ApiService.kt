@@ -27,19 +27,19 @@ interface ApiService {
     ): Response<ApiResponse<List<Vinyl>>>
 
     @GET("vinyl/{id}")
-    suspend fun getVinyl(@Path("id") id: Int): Response<ApiResponse<Vinyl>>
+    suspend fun getVinyl(@Path("id") id: String): Response<ApiResponse<Vinyl>>
 
     @POST("vinyl")
     suspend fun addVinyl(@Body vinyl: VinylRequest): Response<ApiResponse<Vinyl>>
 
     @PUT("vinyl/{id}")
     suspend fun updateVinyl(
-        @Path("id") id: Int,
+        @Path("id") id: String,
         @Body vinyl: VinylRequest
     ): Response<ApiResponse<Vinyl>>
 
     @DELETE("vinyl/{id}")
-    suspend fun deleteVinyl(@Path("id") id: Int): Response<ApiResponse<Unit>>
+    suspend fun deleteVinyl(@Path("id") id: String): Response<ApiResponse<Unit>>
 
     // Filters
     @GET("vinyl/filters/artists")
