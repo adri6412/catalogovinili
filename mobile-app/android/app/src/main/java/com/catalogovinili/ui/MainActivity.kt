@@ -41,7 +41,8 @@ class MainActivity : AppCompatActivity() {
     private fun setupRecyclerView() {
         vinylAdapter = VinylAdapter(vinyls,
             onItemClick = { vinyl -> showVinylDetails(vinyl) },
-            onDeleteClick = { vinyl -> confirmDeleteVinyl(vinyl) }
+            onDeleteClick = { vinyl -> confirmDeleteVinyl(vinyl) },
+            onEbaySearchClick = { vinyl -> searchVinylOnEbay(vinyl) }
         )
         binding.recyclerView.apply {
             layoutManager = LinearLayoutManager(this@MainActivity)
@@ -189,6 +190,13 @@ class MainActivity : AppCompatActivity() {
             }
             .setNegativeButton("Annulla", null)
             .show()
+    }
+
+    private fun searchVinylOnEbay(vinyl: Vinyl) {
+        val query = "${vinyl.Artista} ${vinyl.Titolo}"
+        val intent = Intent(this, EbaySearchActivity::class.java)
+        intent.putExtra("SEARCH_QUERY", query)
+        startActivity(intent)
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {

@@ -9,7 +9,8 @@ import com.catalogovinili.databinding.ItemVinylBinding
 class VinylAdapter(
     private val vinyls: List<Vinyl>,
     private val onItemClick: (Vinyl) -> Unit,
-    private val onDeleteClick: (Vinyl) -> Unit
+    private val onDeleteClick: (Vinyl) -> Unit,
+    private val onEbaySearchClick: (Vinyl) -> Unit
 ) : RecyclerView.Adapter<VinylAdapter.VinylViewHolder>() {
 
     inner class VinylViewHolder(private val binding: ItemVinylBinding) :
@@ -20,6 +21,7 @@ class VinylAdapter(
             binding.tvYear.text = vinyl.Anno
             binding.tvGenre.text = vinyl.Genere
             binding.btnDelete.setOnClickListener { onDeleteClick(vinyl) }
+            binding.btnSearchEbay.setOnClickListener { onEbaySearchClick(vinyl) }
             binding.root.setOnClickListener { onItemClick(vinyl) }
         }
     }

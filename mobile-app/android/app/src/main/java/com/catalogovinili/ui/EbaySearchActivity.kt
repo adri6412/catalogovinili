@@ -27,6 +27,13 @@ class EbaySearchActivity : AppCompatActivity() {
         setSupportActionBar(binding.toolbar)
         setupRecyclerView()
         binding.btnSearchEbay.setOnClickListener { performSearch() }
+        
+        // Check if search query was passed from another activity
+        val searchQuery = intent.getStringExtra("SEARCH_QUERY")
+        if (!searchQuery.isNullOrEmpty()) {
+            binding.etSearchEbay.setText(searchQuery)
+            performSearch()
+        }
     }
 
     private fun setupRecyclerView() {
